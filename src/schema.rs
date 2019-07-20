@@ -81,46 +81,6 @@ pub unsafe extern "C" fn tantivy_schema_int_options_get_fastfield_cardinality(
     (&*options).get_fastfield_cardinality().into()
 }
 
-#[inline(always)]
-unsafe fn tantivy_schema_schema_builder_add_int_options_field<F>(
-    func: F,
-    builder: *mut SchemaBuilder,
-    field_name: *const u8,
-    field_name_len: usize,
-    field_options: *const IntOptions,
-) -> u32
-where
-    F: FnOnce(&mut SchemaBuilder, &str, IntOptions) -> Field,
-{
-    let field_name_slice = std::slice::from_raw_parts(field_name, field_name_len);
-
-    let field = func(
-        &mut *builder,
-        std::str::from_utf8_unchecked(field_name_slice),
-        (&*field_options).clone(),
-    );
-    field.0
-}
-
-#[inline(always)]
-unsafe fn tantivy_schema_schema_builder_add_no_options_field<F>(
-    func: F,
-    builder: *mut SchemaBuilder,
-    field_name: *const u8,
-    field_name_len: usize,
-) -> u32
-where
-    F: FnOnce(&mut SchemaBuilder, &str) -> Field,
-{
-    let field_name_slice = std::slice::from_raw_parts(field_name, field_name_len);
-
-    let field = func(
-        &mut *builder,
-        std::str::from_utf8_unchecked(field_name_slice),
-    );
-    field.0
-}
-
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_schema_schema_builder_add_u64_field(
     builder: *mut SchemaBuilder,
@@ -128,13 +88,11 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_u64_field(
     field_name_len: usize,
     field_options: *const IntOptions,
 ) -> u32 {
-    tantivy_schema_schema_builder_add_int_options_field(
-        SchemaBuilder::add_u64_field,
-        builder,
-        field_name,
-        field_name_len,
-        field_options,
-    )
+    let field = (&mut *builder).add_u64_field(
+        crate::str_from_slice_parts(field_name, field_name_len),
+        (&*field_options).clone(),
+    );
+    field.0
 }
 
 #[no_mangle]
@@ -144,13 +102,11 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_i64_field(
     field_name_len: usize,
     field_options: *const IntOptions,
 ) -> u32 {
-    tantivy_schema_schema_builder_add_int_options_field(
-        SchemaBuilder::add_i64_field,
-        builder,
-        field_name,
-        field_name_len,
-        field_options,
-    )
+    let field = (&mut *builder).add_i64_field(
+        crate::str_from_slice_parts(field_name, field_name_len),
+        (&*field_options).clone(),
+    );
+    field.0
 }
 
 #[no_mangle]
@@ -160,13 +116,11 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_date_field(
     field_name_len: usize,
     field_options: *const IntOptions,
 ) -> u32 {
-    tantivy_schema_schema_builder_add_int_options_field(
-        SchemaBuilder::add_date_field,
-        builder,
-        field_name,
-        field_name_len,
-        field_options,
-    )
+    let field = (&mut *builder).add_date_field(
+        crate::str_from_slice_parts(field_name, field_name_len),
+        (&*field_options).clone(),
+    );
+    field.0
 }
 
 ctor_dtor!(
@@ -302,12 +256,9 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_facet_field(
     field_name: *const u8,
     field_name_len: usize,
 ) -> u32 {
-    tantivy_schema_schema_builder_add_no_options_field(
-        SchemaBuilder::add_facet_field,
-        builder,
-        field_name,
-        field_name_len,
-    )
+    let field =
+        (&mut *builder).add_facet_field(crate::str_from_slice_parts(field_name, field_name_len));
+    field.0
 }
 
 #[no_mangle]
@@ -316,12 +267,9 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_bytes_field(
     field_name: *const u8,
     field_name_len: usize,
 ) -> u32 {
-    tantivy_schema_schema_builder_add_no_options_field(
-        SchemaBuilder::add_bytes_field,
-        builder,
-        field_name,
-        field_name_len,
-    )
+    let field =
+        (&mut *builder).add_bytes_field(crate::str_from_slice_parts(field_name, field_name_len));
+    field.0
 }
 
 #[no_mangle]

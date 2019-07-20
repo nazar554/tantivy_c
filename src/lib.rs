@@ -33,6 +33,17 @@ macro_rules! ctor_dtor {
     };
 }
 
+unsafe fn str_from_slice_parts<'a>(ptr: *const u8, len: usize) -> &'a str {
+    let slice = std::slice::from_raw_parts(ptr, len);
+    debug_assert!(!ptr.is_null() || len == 0);
+
+    if cfg!(debug_assertions) {
+        std::str::from_utf8(slice).unwrap()
+    } else {
+        std::str::from_utf8_unchecked(slice)
+    }
+}
+
 #[repr(C)]
 pub struct Span<T> {
     ptr: *const T,
