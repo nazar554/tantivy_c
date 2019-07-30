@@ -44,6 +44,7 @@ pub enum CCardinality {
     SingleValue,
     MultiValues,
 }
+
 impl From<Option<Cardinality>> for CCardinality {
     fn from(value: Option<Cardinality>) -> CCardinality {
         match value {
@@ -53,6 +54,7 @@ impl From<Option<Cardinality>> for CCardinality {
         }
     }
 }
+
 impl From<CCardinality> for Option<Cardinality> {
     fn from(value: CCardinality) -> Option<Cardinality> {
         match value {
@@ -270,6 +272,16 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_bytes_field(
     let field =
         (&mut *builder).add_bytes_field(crate::str_from_slice_parts(field_name, field_name_len));
     field.0
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_schema_is_valid_field_name(
+    field_name: *const u8,
+    field_name_len: usize,
+) -> bool {
+    let field_name_slice = std::slice::from_raw_parts(field_name, field_name_len);
+
+    is_valid_field_name(std::str::from_utf8_unchecked(field_name_slice))
 }
 
 #[no_mangle]
