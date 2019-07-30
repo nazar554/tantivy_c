@@ -293,4 +293,12 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_build(
     box_new_into_raw!(builder.build())
 }
 
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_schema_schema_get_field_name(
+    schema: *const Schema,
+    field: u32,
+) -> crate::Span<u8> {
+    (&*schema).get_field_name(Field(field)).as_bytes().into()
+}
+
 dtor!(tantivy_schema, schema, Schema);

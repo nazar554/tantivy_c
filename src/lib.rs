@@ -79,3 +79,6 @@ pub use self::collector::*;
 
 mod schema;
 pub use self::schema::*;
+
+mod index;
+pub use self::index::*;
