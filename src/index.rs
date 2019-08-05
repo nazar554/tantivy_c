@@ -9,6 +9,22 @@ pub unsafe extern "C" fn tantivy_index_create_in_ram(schema: *const Schema) -> *
 }
 
 #[no_mangle]
+pub unsafe extern "C" fn tantivy_index_create_from_tempdir(
+    schema: *const Schema,
+    out_error: *mut *mut tantivy::TantivyError,
+) -> *mut Index {
+    match Index::create_from_tempdir((&*schema).clone()) {
+        Ok(index) => box_new_into_raw!(index),
+        Err(e) => {
+            if !out_error.is_null() {
+                *out_error = box_new_into_raw!(e);
+            }
+            std::ptr::null_mut()
+        }
+    }
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn tantivy_index_set_multithread_executor(
     index: *mut Index,
     num_threads: usize,
