@@ -135,10 +135,10 @@ ctor_dtor!(
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_schema_text_options_get_indexing_options(
     options: *const TextOptions,
-) -> *const TextFieldIndexing {
+) -> *mut TextFieldIndexing {
     match (&*options).get_indexing_options() {
-        Some(reference) => reference,
-        None => std::ptr::null(),
+        Some(reference) => box_new_into_raw!(reference.clone()),
+        None => std::ptr::null_mut(),
     }
 }
 
