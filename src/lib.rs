@@ -33,6 +33,21 @@ macro_rules! ctor_dtor {
     };
 }
 
+unsafe fn map_result<T>(
+    result: tantivy::Result<T>,
+    out_error: *mut *mut tantivy::TantivyError,
+) -> *mut T {
+    match result {
+        Ok(value) => box_new_into_raw!(value),
+        Err(e) => {
+            if !out_error.is_null() {
+                *out_error = box_new_into_raw!(e);
+            }
+            std::ptr::null_mut()
+        }
+    }
+}
+
 unsafe fn str_from_slice_parts<'a>(ptr: *const u8, len: usize) -> &'a str {
     let slice = std::slice::from_raw_parts(ptr, len);
     debug_assert!(!ptr.is_null() || len == 0);
