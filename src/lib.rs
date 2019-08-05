@@ -44,6 +44,31 @@ unsafe fn str_from_slice_parts<'a>(ptr: *const u8, len: usize) -> &'a str {
     }
 }
 
+dtor!(tantivy, error, tantivy::TantivyError);
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_get_error_display_string(error: *const tantivy::TantivyError, buf: *mut u8, len: *mut usize) {
+    debug_assert!(!error.is_null());
+    debug_assert!(!len.is_null());
+
+    let string = (&*error).to_string().into_bytes();
+    let mut string_len = string.len();
+
+    if buf.is_null() {
+        *len = string_len;
+    } else {
+        let buffer_len = *len;
+        if string_len > buffer_len {
+            string_len = buffer_len;
+        } else {
+            *len = string_len;
+        }
+
+        let slice = std::slice::from_raw_parts_mut(buf, string_len);
+        slice.copy_from_slice(&string[0..string_len]);
+    }
+}
+
 #[repr(C)]
 pub struct Span<T> {
     ptr: *const T,
@@ -82,3 +107,4 @@ pub use self::schema::*;
 
 mod index;
 pub use self::index::*;
+
