@@ -47,7 +47,11 @@ unsafe fn str_from_slice_parts<'a>(ptr: *const u8, len: usize) -> &'a str {
 dtor!(tantivy, error, tantivy::TantivyError);
 
 #[no_mangle]
-pub unsafe extern "C" fn tantivy_get_error_display_string(error: *const tantivy::TantivyError, buf: *mut u8, len: *mut usize) {
+pub unsafe extern "C" fn tantivy_get_error_display_string(
+    error: *const tantivy::TantivyError,
+    buf: *mut u8,
+    len: *mut usize,
+) {
     debug_assert!(!error.is_null());
     debug_assert!(!len.is_null());
 
@@ -103,4 +107,3 @@ pub use self::schema::*;
 
 mod index;
 pub use self::index::*;
-
