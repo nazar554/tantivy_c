@@ -52,20 +52,16 @@ pub unsafe extern "C" fn tantivy_get_error_display_string(error: *const tantivy:
     debug_assert!(!len.is_null());
 
     let string = (&*error).to_string().into_bytes();
-    let mut string_len = string.len();
+    let string_len = string.len();
 
-    if buf.is_null() {
-        *len = string_len;
-    } else {
-        let buffer_len = *len;
-        if string_len > buffer_len {
-            string_len = buffer_len;
-        } else {
-            *len = string_len;
-        }
+    let buffer_len = *len;
+    *len = string_len;
 
-        let slice = std::slice::from_raw_parts_mut(buf, string_len);
-        slice.copy_from_slice(&string[0..string_len]);
+    if !buf.is_null() {
+        let min_length = buffer_len.min(string_len);
+
+        let slice = std::slice::from_raw_parts_mut(buf, min_length);
+        slice.copy_from_slice(&string[..min_length]);
     }
 }
 
