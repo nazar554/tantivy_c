@@ -20,7 +20,9 @@ macro_rules! dtor {
         paste::item! {
             #[no_mangle]
             pub unsafe extern "C" fn [<$prefix _drop_ $name>](value: *mut $t) {
-                Box::from_raw(value);
+                if !value.is_null() {
+                    Box::from_raw(value);
+                }
             }
         }
     };

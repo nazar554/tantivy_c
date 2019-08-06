@@ -15,21 +15,25 @@ ctor_dtor!(
 
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_schema_int_options_is_stored(options: *const IntOptions) -> bool {
+    debug_assert!(!options.is_null());
     (&*options).is_stored()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_schema_int_options_is_indexed(options: *const IntOptions) -> bool {
+    debug_assert!(!options.is_null());
     (&*options).is_indexed()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_schema_int_options_is_fast(options: *const IntOptions) -> bool {
+    debug_assert!(!options.is_null());
     (&*options).is_fast()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_schema_int_options_set_stored(options: *mut IntOptions) {
+    debug_assert!(!options.is_null());
     take_mut::take(&mut *options, |options| options.set_stored())
 }
 
@@ -70,6 +74,7 @@ pub unsafe extern "C" fn tantivy_schema_int_options_set_fast(
     options: *mut IntOptions,
     cardinality: CCardinality,
 ) {
+    debug_assert!(!options.is_null());
     take_mut::take(&mut *options, |options| {
         let cardinality: Option<_> = cardinality.into();
         options.set_fast(cardinality.unwrap())
@@ -80,6 +85,7 @@ pub unsafe extern "C" fn tantivy_schema_int_options_set_fast(
 pub unsafe extern "C" fn tantivy_schema_int_options_get_fastfield_cardinality(
     options: *const IntOptions,
 ) -> CCardinality {
+    debug_assert!(!options.is_null());
     (&*options).get_fastfield_cardinality().into()
 }
 
@@ -90,6 +96,9 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_u64_field(
     field_name_len: usize,
     field_options: *const IntOptions,
 ) -> u32 {
+    debug_assert!(!builder.is_null());
+    debug_assert!(!field_options.is_null());
+
     let field = (&mut *builder).add_u64_field(
         crate::str_from_slice_parts(field_name, field_name_len),
         (&*field_options).clone(),
@@ -104,6 +113,9 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_i64_field(
     field_name_len: usize,
     field_options: *const IntOptions,
 ) -> u32 {
+    debug_assert!(!builder.is_null());
+    debug_assert!(!field_options.is_null());
+
     let field = (&mut *builder).add_i64_field(
         crate::str_from_slice_parts(field_name, field_name_len),
         (&*field_options).clone(),
@@ -118,6 +130,9 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_date_field(
     field_name_len: usize,
     field_options: *const IntOptions,
 ) -> u32 {
+    debug_assert!(!builder.is_null());
+    debug_assert!(!field_options.is_null());
+
     let field = (&mut *builder).add_date_field(
         crate::str_from_slice_parts(field_name, field_name_len),
         (&*field_options).clone(),
@@ -136,6 +151,8 @@ ctor_dtor!(
 pub unsafe extern "C" fn tantivy_schema_text_options_get_indexing_options(
     options: *const TextOptions,
 ) -> *mut TextFieldIndexing {
+    debug_assert!(!options.is_null());
+
     match (&*options).get_indexing_options() {
         Some(reference) => box_new_into_raw!(reference.clone()),
         None => std::ptr::null_mut(),
@@ -146,11 +163,13 @@ pub unsafe extern "C" fn tantivy_schema_text_options_get_indexing_options(
 pub unsafe extern "C" fn tantivy_schema_text_options_is_stored(
     options: *const TextOptions,
 ) -> bool {
+    debug_assert!(!options.is_null());
     (&*options).is_stored()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_schema_text_options_set_stored(options: *mut TextOptions) {
+    debug_assert!(!options.is_null());
     take_mut::take(&mut *options, |options| options.set_stored())
 }
 
@@ -159,6 +178,8 @@ pub unsafe extern "C" fn tantivy_schema_text_options_set_indexing_options(
     text_options: *mut TextOptions,
     options: *const TextFieldIndexing,
 ) {
+    debug_assert!(!text_options.is_null());
+    debug_assert!(!options.is_null());
     take_mut::take(&mut *text_options, |text_options| {
         text_options.set_indexing_options((&*options).clone())
     })
@@ -177,11 +198,13 @@ pub unsafe extern "C" fn tantivy_schema_text_field_indexing_set_tokenizer(
     tokenizer_name: *const u8,
     tokenizer_name_len: usize,
 ) {
-    let tokenizer_name_slice = std::slice::from_raw_parts(tokenizer_name, tokenizer_name_len);
-    let tokenizer_name_str = std::str::from_utf8_unchecked(tokenizer_name_slice);
+    debug_assert!(!options.is_null());
 
     take_mut::take(&mut *options, |options| {
-        options.set_tokenizer(tokenizer_name_str)
+        options.set_tokenizer(crate::str_from_slice_parts(
+            tokenizer_name,
+            tokenizer_name_len,
+        ))
     })
 }
 
@@ -189,6 +212,7 @@ pub unsafe extern "C" fn tantivy_schema_text_field_indexing_set_tokenizer(
 pub unsafe extern "C" fn tantivy_schema_text_field_indexing_tokenizer(
     options: *const TextFieldIndexing,
 ) -> crate::Span<u8> {
+    debug_assert!(!options.is_null());
     (&*options).tokenizer().as_bytes().into()
 }
 
@@ -224,6 +248,7 @@ pub unsafe extern "C" fn tantivy_schema_text_field_indexing_set_index_option(
     options: *mut TextFieldIndexing,
     index_option: CIndexRecordOption,
 ) {
+    debug_assert!(!options.is_null());
     take_mut::take(&mut *options, |options| {
         options.set_index_option(index_option.into())
     })
@@ -233,6 +258,7 @@ pub unsafe extern "C" fn tantivy_schema_text_field_indexing_set_index_option(
 pub unsafe extern "C" fn tantivy_schema_text_field_indexing_index_option(
     options: *mut TextFieldIndexing,
 ) -> CIndexRecordOption {
+    debug_assert!(!options.is_null());
     (&*options).index_option().into()
 }
 
@@ -243,10 +269,11 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_text_field(
     field_name_len: usize,
     field_options: *const TextOptions,
 ) -> u32 {
-    let field_name_slice = std::slice::from_raw_parts(field_name, field_name_len);
+    debug_assert!(!builder.is_null());
+    debug_assert!(!field_options.is_null());
 
     let field = (&mut *builder).add_text_field(
-        std::str::from_utf8_unchecked(field_name_slice),
+        crate::str_from_slice_parts(field_name, field_name_len),
         (&*field_options).clone(),
     );
     field.0
@@ -258,6 +285,7 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_facet_field(
     field_name: *const u8,
     field_name_len: usize,
 ) -> u32 {
+    debug_assert!(!builder.is_null());
     let field =
         (&mut *builder).add_facet_field(crate::str_from_slice_parts(field_name, field_name_len));
     field.0
@@ -269,6 +297,7 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_bytes_field(
     field_name: *const u8,
     field_name_len: usize,
 ) -> u32 {
+    debug_assert!(!builder.is_null());
     let field =
         (&mut *builder).add_bytes_field(crate::str_from_slice_parts(field_name, field_name_len));
     field.0
@@ -279,15 +308,14 @@ pub unsafe extern "C" fn tantivy_schema_is_valid_field_name(
     field_name: *const u8,
     field_name_len: usize,
 ) -> bool {
-    let field_name_slice = std::slice::from_raw_parts(field_name, field_name_len);
-
-    is_valid_field_name(std::str::from_utf8_unchecked(field_name_slice))
+    is_valid_field_name(crate::str_from_slice_parts(field_name, field_name_len))
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_schema_schema_builder_build(
     builder: *mut SchemaBuilder,
 ) -> *mut Schema {
+    debug_assert!(!builder.is_null());
     let builder = Box::from_raw(builder);
 
     box_new_into_raw!(builder.build())
@@ -298,6 +326,7 @@ pub unsafe extern "C" fn tantivy_schema_schema_get_field_name(
     schema: *const Schema,
     field: u32,
 ) -> crate::Span<u8> {
+    debug_assert!(!schema.is_null());
     (&*schema).get_field_name(Field(field)).as_bytes().into()
 }
 

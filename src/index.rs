@@ -5,6 +5,7 @@ dtor!(tantivy, index, Index);
 
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_index_create_in_ram(schema: *const Schema) -> *mut Index {
+    debug_assert!(!schema.is_null());
     box_new_into_raw!(Index::create_in_ram((&*schema).clone()))
 }
 
@@ -13,6 +14,7 @@ pub unsafe extern "C" fn tantivy_index_create_from_tempdir(
     schema: *const Schema,
     out_error: *mut *mut tantivy::TantivyError,
 ) -> *mut Index {
+    debug_assert!(!schema.is_null());
     crate::map_result(Index::create_from_tempdir((&*schema).clone()), out_error)
 }
 
@@ -24,6 +26,7 @@ pub unsafe extern "C" fn tantivy_index_writer(
     overall_heap_size_in_bytes: usize,
     out_error: *mut *mut tantivy::TantivyError,
 ) -> *mut IndexWriter {
+    debug_assert!(!index.is_null());
     crate::map_result((&*index).writer(overall_heap_size_in_bytes), out_error)
 }
 
@@ -34,6 +37,7 @@ pub unsafe extern "C" fn tantivy_index_reader(
     index: *const Index,
     out_error: *mut *mut tantivy::TantivyError,
 ) -> *mut IndexReader {
+    debug_assert!(!index.is_null());
     crate::map_result((&*index).reader(), out_error)
 }
 
@@ -44,6 +48,7 @@ pub unsafe extern "C" fn tantivy_index_writer_with_num_threads(
     overall_heap_size_in_bytes: usize,
     out_error: *mut *mut tantivy::TantivyError,
 ) -> *mut IndexWriter {
+    debug_assert!(!index.is_null());
     crate::map_result(
         (&*index).writer_with_num_threads(num_threads, overall_heap_size_in_bytes),
         out_error,
@@ -55,16 +60,19 @@ pub unsafe extern "C" fn tantivy_index_set_multithread_executor(
     index: *mut Index,
     num_threads: usize,
 ) {
+    debug_assert!(!index.is_null());
     (&mut *index).set_multithread_executor(num_threads)
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_index_set_default_multithread_executor(index: *mut Index) {
+    debug_assert!(!index.is_null());
     (&mut *index).set_default_multithread_executor()
 }
 
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_index_schema(index: *const Index) -> *mut Schema {
+    debug_assert!(!index.is_null());
     box_new_into_raw!((&*index).schema())
 }
 
@@ -77,14 +85,5 @@ pub unsafe extern "C" fn tantivy_index_create_in_dir(
 ) -> *mut Index {
     debug_assert!(!schema.is_null());
     let path = crate::str_from_slice_parts(path, path_len);
-
-    match Index::create_in_dir(path, (&*schema).clone()) {
-        Ok(index) => box_new_into_raw!(index),
-        Err(e) => {
-            if !out_error.is_null() {
-                *out_error = box_new_into_raw!(e);
-            }
-            std::ptr::null_mut()
-        }
-    }
+    crate::map_result(Index::create_in_dir(path, (&*schema).clone()), out_error)
 }
