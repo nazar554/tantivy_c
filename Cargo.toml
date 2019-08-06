@@ -13,6 +13,7 @@ crate-type = ["cdylib"]
 tantivy = "0.10.0"
 paste = "0.1.5"
 take_mut = "0.2.2"
+chrono = "0.4.7"
 
 [profile.dev]
 panic = "abort"

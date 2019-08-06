@@ -1,3 +1,4 @@
+use chrono::TimeZone;
 use tantivy::schema::*;
 
 ctor_dtor!(
@@ -331,3 +332,91 @@ pub unsafe extern "C" fn tantivy_schema_schema_get_field_name(
 }
 
 dtor!(tantivy_schema, schema, Schema);
+
+ctor_dtor!(tantivy_schema, document, Document, Document::new());
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_schema_document_len(document: *const Document) -> usize {
+    debug_assert!(!document.is_null());
+    (&*document).len()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_schema_document_is_empty(document: *const Document) -> bool {
+    debug_assert!(!document.is_null());
+    (&*document).is_empty()
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_schema_document_filter_fields(
+    document: *mut Document,
+    func: extern "C" fn(u32) -> bool,
+) {
+    debug_assert!(!document.is_null());
+    (&mut *document).filter_fields(|field| func(field.0))
+}
+
+// TODO: tantivy_schema_document_add_facet
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_schema_document_add_text(
+    document: *mut Document,
+    field: u32,
+    text: *const u8,
+    len: usize,
+) {
+    debug_assert!(!document.is_null());
+    (&mut *document).add_text(Field(field), crate::str_from_slice_parts(text, len))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_schema_document_add_u64(
+    document: *mut Document,
+    field: u32,
+    value: u64,
+) {
+    debug_assert!(!document.is_null());
+    (&mut *document).add_u64(Field(field), value)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_schema_document_add_i64(
+    document: *mut Document,
+    field: u32,
+    value: i64,
+) {
+    debug_assert!(!document.is_null());
+    (&mut *document).add_i64(Field(field), value)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_schema_document_add_date(
+    document: *mut Document,
+    field: u32,
+    nanoseconds_since_epoch: i64,
+) {
+    debug_assert!(!document.is_null());
+
+    let value = chrono::Utc.timestamp_nanos(nanoseconds_since_epoch);
+    (&mut *document).add_date(Field(field), &value)
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_schema_document_add_bytes(
+    document: *mut Document,
+    field: u32,
+    buffer: *const u8,
+    len: usize,
+) {
+    debug_assert!(!document.is_null());
+    debug_assert!(!buffer.is_null() || len == 0);
+
+    let bytes = std::slice::from_raw_parts(buffer, len);
+    (&mut *document).add_bytes(Field(field), bytes.to_owned())
+}
+
+// TODO: tantivy_schema_document_add
+// TODO: tantivy_schema_document_field_values
+// TODO: tantivy_schema_document_get_sorted_field_values
+// TODO: tantivy_schema_document_get_all
+// TODO: tantivy_schema_document_get_first
