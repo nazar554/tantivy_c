@@ -35,12 +35,37 @@ macro_rules! ctor_dtor {
     };
 }
 
-unsafe fn map_result<T>(
+unsafe fn map_result<T: Copy + Default>(
+    result: tantivy::Result<T>,
+    out_error: *mut *mut tantivy::TantivyError,
+) -> T {
+    match result {
+        Ok(value) => {
+            if !out_error.is_null() {
+                *out_error = std::ptr::null_mut();
+            }
+            value
+        },
+        Err(e) => {
+            if !out_error.is_null() {
+                *out_error = box_new_into_raw!(e);
+            }
+            T::default()
+        }
+    }
+}
+
+unsafe fn map_result_boxed<T>(
     result: tantivy::Result<T>,
     out_error: *mut *mut tantivy::TantivyError,
 ) -> *mut T {
     match result {
-        Ok(value) => box_new_into_raw!(value),
+        Ok(value) => {
+            if !out_error.is_null() {
+                *out_error = std::ptr::null_mut();
+            }
+            box_new_into_raw!(value)
+        },
         Err(e) => {
             if !out_error.is_null() {
                 *out_error = box_new_into_raw!(e);

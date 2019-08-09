@@ -15,7 +15,7 @@ pub unsafe extern "C" fn tantivy_index_create_from_tempdir(
     out_error: *mut *mut tantivy::TantivyError,
 ) -> *mut Index {
     debug_assert!(!schema.is_null());
-    crate::map_result(Index::create_from_tempdir((&*schema).clone()), out_error)
+    crate::map_result_boxed(Index::create_from_tempdir((&*schema).clone()), out_error)
 }
 
 dtor!(tantivy_index, index_writer, IndexWriter);
@@ -27,7 +27,7 @@ pub unsafe extern "C" fn tantivy_index_writer(
     out_error: *mut *mut tantivy::TantivyError,
 ) -> *mut IndexWriter {
     debug_assert!(!index.is_null());
-    crate::map_result((&*index).writer(overall_heap_size_in_bytes), out_error)
+    crate::map_result_boxed((&*index).writer(overall_heap_size_in_bytes), out_error)
 }
 
 dtor!(tantivy_index, index_reader, IndexReader);
@@ -38,7 +38,7 @@ pub unsafe extern "C" fn tantivy_index_reader(
     out_error: *mut *mut tantivy::TantivyError,
 ) -> *mut IndexReader {
     debug_assert!(!index.is_null());
-    crate::map_result((&*index).reader(), out_error)
+    crate::map_result_boxed((&*index).reader(), out_error)
 }
 
 #[no_mangle]
@@ -49,7 +49,7 @@ pub unsafe extern "C" fn tantivy_index_writer_with_num_threads(
     out_error: *mut *mut tantivy::TantivyError,
 ) -> *mut IndexWriter {
     debug_assert!(!index.is_null());
-    crate::map_result(
+    crate::map_result_boxed(
         (&*index).writer_with_num_threads(num_threads, overall_heap_size_in_bytes),
         out_error,
     )
@@ -85,5 +85,24 @@ pub unsafe extern "C" fn tantivy_index_create_in_dir(
 ) -> *mut Index {
     debug_assert!(!schema.is_null());
     let path = crate::str_from_slice_parts(path, path_len);
-    crate::map_result(Index::create_in_dir(path, (&*schema).clone()), out_error)
+    crate::map_result_boxed(Index::create_in_dir(path, (&*schema).clone()), out_error)
+}
+
+pub unsafe extern "C" fn tantivy_index_writer_add_document(
+    writer: *mut IndexWriter,
+    document: *const Document,
+) -> u64 {
+    debug_assert!(!writer.is_null());
+    debug_assert!(!document.is_null());
+
+    (&mut *writer).add_document((&*document).clone())
+}
+
+pub unsafe extern "C" fn tantivy_index_writer_commit(
+    writer: *mut IndexWriter,
+    out_error: *mut *mut tantivy::TantivyError,
+) -> u64 {
+    debug_assert!(!writer.is_null());
+
+    crate::map_result((&mut *writer).commit(), out_error)
 }
