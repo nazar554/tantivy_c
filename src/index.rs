@@ -116,6 +116,7 @@ pub unsafe extern "C" fn tantivy_index_create_in_dir_move(
     crate::map_result_boxed(Index::create_in_dir(path, *Box::from_raw(schema)), out_error)
 }
 
+#[no_mangle]
 pub unsafe extern "C" fn tantivy_index_writer_add_document_copy(
     writer: *mut IndexWriter,
     document: *const Document,
@@ -126,6 +127,7 @@ pub unsafe extern "C" fn tantivy_index_writer_add_document_copy(
     (&mut *writer).add_document((&*document).clone())
 }
 
+#[no_mangle]
 pub unsafe extern "C" fn tantivy_index_writer_add_document_move(
     writer: *mut IndexWriter,
     document: *mut Document,
@@ -136,6 +138,7 @@ pub unsafe extern "C" fn tantivy_index_writer_add_document_move(
     (&mut *writer).add_document(*Box::from_raw(document))
 }
 
+#[no_mangle]
 pub unsafe extern "C" fn tantivy_index_writer_commit(
     writer: *mut IndexWriter,
     out_error: *mut *mut tantivy::TantivyError,
