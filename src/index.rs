@@ -4,18 +4,34 @@ use tantivy::*;
 dtor!(tantivy, index, Index);
 
 #[no_mangle]
-pub unsafe extern "C" fn tantivy_index_create_in_ram(schema: *const Schema) -> *mut Index {
+pub unsafe extern "C" fn tantivy_index_create_in_ram_copy(schema: *const Schema) -> *mut Index {
     debug_assert!(!schema.is_null());
     box_new_into_raw!(Index::create_in_ram((&*schema).clone()))
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tantivy_index_create_from_tempdir(
+pub unsafe extern "C" fn tantivy_index_create_in_ram_move(schema: *mut Schema) -> *mut Index {
+    debug_assert!(!schema.is_null());
+    box_new_into_raw!(Index::create_in_ram(*Box::from_raw(schema)))
+}
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_index_create_from_tempdir_copy(
     schema: *const Schema,
     out_error: *mut *mut tantivy::TantivyError,
 ) -> *mut Index {
     debug_assert!(!schema.is_null());
     crate::map_result_boxed(Index::create_from_tempdir((&*schema).clone()), out_error)
+}
+
+
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_index_create_from_tempdir_move(
+    schema: *mut Schema,
+    out_error: *mut *mut tantivy::TantivyError,
+) -> *mut Index {
+    debug_assert!(!schema.is_null());
+    crate::map_result_boxed(Index::create_from_tempdir(*Box::from_raw(schema)), out_error)
 }
 
 dtor!(tantivy_index, index_writer, IndexWriter);
@@ -77,7 +93,7 @@ pub unsafe extern "C" fn tantivy_index_schema(index: *const Index) -> *mut Schem
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tantivy_index_create_in_dir(
+pub unsafe extern "C" fn tantivy_index_create_in_dir_copy(
     path: *const u8,
     path_len: usize,
     schema: *const Schema,
@@ -88,7 +104,19 @@ pub unsafe extern "C" fn tantivy_index_create_in_dir(
     crate::map_result_boxed(Index::create_in_dir(path, (&*schema).clone()), out_error)
 }
 
-pub unsafe extern "C" fn tantivy_index_writer_add_document(
+#[no_mangle]
+pub unsafe extern "C" fn tantivy_index_create_in_dir_move(
+    path: *const u8,
+    path_len: usize,
+    schema: *mut Schema,
+    out_error: *mut *mut tantivy::TantivyError,
+) -> *mut Index {
+    debug_assert!(!schema.is_null());
+    let path = crate::str_from_slice_parts(path, path_len);
+    crate::map_result_boxed(Index::create_in_dir(path, *Box::from_raw(schema)), out_error)
+}
+
+pub unsafe extern "C" fn tantivy_index_writer_add_document_copy(
     writer: *mut IndexWriter,
     document: *const Document,
 ) -> u64 {
@@ -96,6 +124,16 @@ pub unsafe extern "C" fn tantivy_index_writer_add_document(
     debug_assert!(!document.is_null());
 
     (&mut *writer).add_document((&*document).clone())
+}
+
+pub unsafe extern "C" fn tantivy_index_writer_add_document_move(
+    writer: *mut IndexWriter,
+    document: *mut Document,
+) -> u64 {
+    debug_assert!(!writer.is_null());
+    debug_assert!(!document.is_null());
+
+    (&mut *writer).add_document(*Box::from_raw(document))
 }
 
 pub unsafe extern "C" fn tantivy_index_writer_commit(
