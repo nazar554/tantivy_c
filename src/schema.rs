@@ -1,4 +1,3 @@
-use chrono::TimeZone;
 use tantivy::schema::*;
 
 ctor_dtor!(
@@ -393,12 +392,20 @@ pub unsafe extern "C" fn tantivy_schema_document_add_i64(
 pub unsafe extern "C" fn tantivy_schema_document_add_date(
     document: *mut Document,
     field: u32,
-    nanoseconds_since_epoch: i64,
+    year: i32,
+    ordinal: u32,
+    secs: u32,
+    nano: u32,
 ) {
+    use chrono::{Utc, NaiveTime, TimeZone};
+
     debug_assert!(!document.is_null());
 
-    let value = chrono::Utc.timestamp_nanos(nanoseconds_since_epoch);
-    (&mut *document).add_date(Field(field), &value)
+    let date = Utc.yo(year, ordinal);
+    let time = NaiveTime::from_num_seconds_from_midnight(secs, nano);
+    let date_time = date.and_time(time).unwrap();
+
+    (&mut *document).add_date(Field(field), &date_time)
 }
 
 #[no_mangle]
