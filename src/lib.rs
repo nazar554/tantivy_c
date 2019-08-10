@@ -35,17 +35,14 @@ macro_rules! ctor_dtor {
     };
 }
 
-unsafe fn map_result<T: Copy + Default>(
-    result: tantivy::Result<T>,
-    out_error: *mut *mut tantivy::TantivyError,
-) -> T {
+unsafe fn map_result<T: Copy + Default, E>(result: Result<T, E>, out_error: *mut *mut E) -> T {
     match result {
         Ok(value) => {
             if !out_error.is_null() {
                 *out_error = std::ptr::null_mut();
             }
             value
-        },
+        }
         Err(e) => {
             if !out_error.is_null() {
                 *out_error = box_new_into_raw!(e);
@@ -55,17 +52,14 @@ unsafe fn map_result<T: Copy + Default>(
     }
 }
 
-unsafe fn map_result_boxed<T>(
-    result: tantivy::Result<T>,
-    out_error: *mut *mut tantivy::TantivyError,
-) -> *mut T {
+unsafe fn map_result_boxed<T, E>(result: Result<T, E>, out_error: *mut *mut E) -> *mut T {
     match result {
         Ok(value) => {
             if !out_error.is_null() {
                 *out_error = std::ptr::null_mut();
             }
             box_new_into_raw!(value)
-        },
+        }
         Err(e) => {
             if !out_error.is_null() {
                 *out_error = box_new_into_raw!(e);
@@ -76,8 +70,8 @@ unsafe fn map_result_boxed<T>(
 }
 
 unsafe fn str_from_slice_parts<'a>(ptr: *const u8, len: usize) -> &'a str {
-    let slice = std::slice::from_raw_parts(ptr, len);
     debug_assert!(!ptr.is_null() || len == 0);
+    let slice = std::slice::from_raw_parts(ptr, len);
 
     if cfg!(debug_assertions) {
         std::str::from_utf8(slice).unwrap()
@@ -149,3 +143,6 @@ pub use self::schema::*;
 
 mod index;
 pub use self::index::*;
+
+mod query;
+pub use self::query::*;

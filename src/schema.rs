@@ -397,7 +397,7 @@ pub unsafe extern "C" fn tantivy_schema_document_add_date(
     secs: u32,
     nano: u32,
 ) {
-    use chrono::{Utc, NaiveTime, TimeZone};
+    use chrono::{NaiveTime, TimeZone, Utc};
 
     debug_assert!(!document.is_null());
 
