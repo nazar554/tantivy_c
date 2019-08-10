@@ -26,6 +26,15 @@ dtor!(tantivy, boxed_dyn_query, Box<dyn Query>);
 dtor!(tantivy, query_parser_error, QueryParserError);
 
 #[no_mangle]
+pub unsafe extern "C" fn tantivy_get_query_parser_error_display_string(
+    error: *const QueryParserError,
+    buf: *mut u8,
+    len: *mut usize,
+) {
+    crate::write_display_string(&*error, buf, len)
+}
+
+#[no_mangle]
 pub unsafe extern "C" fn tantivy_query_parser_parse_query(
     parser: *const QueryParser,
     query: *const u8,

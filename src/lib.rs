@@ -82,27 +82,46 @@ unsafe fn str_from_slice_parts<'a>(ptr: *const u8, len: usize) -> &'a str {
 
 dtor!(tantivy, error, tantivy::TantivyError);
 
+unsafe fn write_or_truncate<T: Copy>(
+    slice: &[T],
+    buf: *mut T,
+    len: *mut usize,
+) {
+    debug_assert!(!len.is_null());
+
+    let slice_len = slice.len();
+
+    let buffer_len = *len;
+    *len = slice_len;
+
+    if !buf.is_null() {
+        let min_length = buffer_len.min(slice_len);
+
+        let output = std::slice::from_raw_parts_mut(buf, min_length);
+        output.copy_from_slice(&slice[..min_length]);
+    }
+}
+
+use std::fmt::Display;
+
+unsafe fn write_display_string<T: Display>(
+    display: *const T,
+    buf: *mut u8,
+    len: *mut usize,
+) {
+    debug_assert!(!display.is_null());
+
+    let bytes = (&*display).to_string().into_bytes();
+    write_or_truncate(&bytes, buf, len)
+}
+
 #[no_mangle]
 pub unsafe extern "C" fn tantivy_get_error_display_string(
     error: *const tantivy::TantivyError,
     buf: *mut u8,
     len: *mut usize,
 ) {
-    debug_assert!(!error.is_null());
-    debug_assert!(!len.is_null());
-
-    let string = (&*error).to_string().into_bytes();
-    let string_len = string.len();
-
-    let buffer_len = *len;
-    *len = string_len;
-
-    if !buf.is_null() {
-        let min_length = buffer_len.min(string_len);
-
-        let slice = std::slice::from_raw_parts_mut(buf, min_length);
-        slice.copy_from_slice(&string[..min_length]);
-    }
+    write_display_string(&*error, buf, len)
 }
 
 #[repr(C)]
