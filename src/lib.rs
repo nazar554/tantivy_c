@@ -82,11 +82,7 @@ unsafe fn str_from_slice_parts<'a>(ptr: *const u8, len: usize) -> &'a str {
 
 dtor!(tantivy, error, tantivy::TantivyError);
 
-unsafe fn write_or_truncate<T: Copy>(
-    slice: &[T],
-    buf: *mut T,
-    len: *mut usize,
-) {
+unsafe fn write_or_truncate<T: Copy>(slice: &[T], buf: *mut T, len: *mut usize) {
     debug_assert!(!len.is_null());
 
     let slice_len = slice.len();
@@ -104,11 +100,7 @@ unsafe fn write_or_truncate<T: Copy>(
 
 use std::fmt::Display;
 
-unsafe fn write_display_string<T: Display>(
-    display: *const T,
-    buf: *mut u8,
-    len: *mut usize,
-) {
+unsafe fn write_display_string<T: Display>(display: *const T, buf: *mut u8, len: *mut usize) {
     debug_assert!(!display.is_null());
 
     let bytes = (&*display).to_string().into_bytes();

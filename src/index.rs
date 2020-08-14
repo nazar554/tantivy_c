@@ -77,15 +77,23 @@ pub unsafe extern "C" fn tantivy_index_writer_with_num_threads(
 pub unsafe extern "C" fn tantivy_index_set_multithread_executor(
     index: *mut Index,
     num_threads: usize,
+    out_error: *mut *mut TantivyError,
 ) {
     debug_assert!(!index.is_null());
-    (&mut *index).set_multithread_executor(num_threads)
+
+    crate::map_result(
+        (&mut *index).set_multithread_executor(num_threads),
+        out_error,
+    )
 }
 
 #[no_mangle]
-pub unsafe extern "C" fn tantivy_index_set_default_multithread_executor(index: *mut Index) {
+pub unsafe extern "C" fn tantivy_index_set_default_multithread_executor(
+    index: *mut Index,
+    out_error: *mut *mut TantivyError,
+) {
     debug_assert!(!index.is_null());
-    (&mut *index).set_default_multithread_executor()
+    crate::map_result((&mut *index).set_default_multithread_executor(), out_error)
 }
 
 #[no_mangle]

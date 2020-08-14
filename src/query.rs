@@ -16,7 +16,7 @@ pub unsafe extern "C" fn tantivy_query_parser_for_index(
     let fields: Vec<Field> = std::slice::from_raw_parts(fields, fields_len)
         .into_iter()
         .cloned()
-        .map(Field)
+        .map(Field::from_field_id)
         .collect();
 
     box_new_into_raw!(QueryParser::for_index(&*index, fields))

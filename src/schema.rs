@@ -103,7 +103,7 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_u64_field(
         crate::str_from_slice_parts(field_name, field_name_len),
         (&*field_options).clone(),
     );
-    field.0
+    field.field_id()
 }
 
 #[no_mangle]
@@ -120,7 +120,7 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_i64_field(
         crate::str_from_slice_parts(field_name, field_name_len),
         (&*field_options).clone(),
     );
-    field.0
+    field.field_id()
 }
 
 #[no_mangle]
@@ -137,7 +137,7 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_date_field(
         crate::str_from_slice_parts(field_name, field_name_len),
         (&*field_options).clone(),
     );
-    field.0
+    field.field_id()
 }
 
 ctor_dtor!(
@@ -276,7 +276,7 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_text_field(
         crate::str_from_slice_parts(field_name, field_name_len),
         (&*field_options).clone(),
     );
-    field.0
+    field.field_id()
 }
 
 #[no_mangle]
@@ -288,7 +288,7 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_facet_field(
     debug_assert!(!builder.is_null());
     let field =
         (&mut *builder).add_facet_field(crate::str_from_slice_parts(field_name, field_name_len));
-    field.0
+    field.field_id()
 }
 
 #[no_mangle]
@@ -300,7 +300,7 @@ pub unsafe extern "C" fn tantivy_schema_schema_builder_add_bytes_field(
     debug_assert!(!builder.is_null());
     let field =
         (&mut *builder).add_bytes_field(crate::str_from_slice_parts(field_name, field_name_len));
-    field.0
+    field.field_id()
 }
 
 #[no_mangle]
@@ -327,7 +327,10 @@ pub unsafe extern "C" fn tantivy_schema_schema_get_field_name(
     field: u32,
 ) -> crate::Span<u8> {
     debug_assert!(!schema.is_null());
-    (&*schema).get_field_name(Field(field)).as_bytes().into()
+    (&*schema)
+        .get_field_name(Field::from_field_id(field))
+        .as_bytes()
+        .into()
 }
 
 dtor!(tantivy_schema, schema, Schema);
@@ -352,7 +355,7 @@ pub unsafe extern "C" fn tantivy_schema_document_filter_fields(
     func: extern "C" fn(u32) -> bool,
 ) {
     debug_assert!(!document.is_null());
-    (&mut *document).filter_fields(|field| func(field.0))
+    (&mut *document).filter_fields(|field| func(field.field_id()))
 }
 
 // TODO: tantivy_schema_document_add_facet
@@ -365,7 +368,10 @@ pub unsafe extern "C" fn tantivy_schema_document_add_text(
     len: usize,
 ) {
     debug_assert!(!document.is_null());
-    (&mut *document).add_text(Field(field), crate::str_from_slice_parts(text, len))
+    (&mut *document).add_text(
+        Field::from_field_id(field),
+        crate::str_from_slice_parts(text, len),
+    )
 }
 
 #[no_mangle]
@@ -375,7 +381,7 @@ pub unsafe extern "C" fn tantivy_schema_document_add_u64(
     value: u64,
 ) {
     debug_assert!(!document.is_null());
-    (&mut *document).add_u64(Field(field), value)
+    (&mut *document).add_u64(Field::from_field_id(field), value)
 }
 
 #[no_mangle]
@@ -385,7 +391,7 @@ pub unsafe extern "C" fn tantivy_schema_document_add_i64(
     value: i64,
 ) {
     debug_assert!(!document.is_null());
-    (&mut *document).add_i64(Field(field), value)
+    (&mut *document).add_i64(Field::from_field_id(field), value)
 }
 
 #[no_mangle]
@@ -405,7 +411,7 @@ pub unsafe extern "C" fn tantivy_schema_document_add_date(
     let time = NaiveTime::from_num_seconds_from_midnight(secs, nano);
     let date_time = date.and_time(time).unwrap();
 
-    (&mut *document).add_date(Field(field), &date_time)
+    (&mut *document).add_date(Field::from_field_id(field), &date_time)
 }
 
 #[no_mangle]
@@ -419,7 +425,7 @@ pub unsafe extern "C" fn tantivy_schema_document_add_bytes(
     debug_assert!(!buffer.is_null() || len == 0);
 
     let bytes = std::slice::from_raw_parts(buffer, len);
-    (&mut *document).add_bytes(Field(field), bytes.to_owned())
+    (&mut *document).add_bytes(Field::from_field_id(field), bytes.to_owned())
 }
 
 // TODO: tantivy_schema_document_add
